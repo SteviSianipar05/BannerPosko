@@ -39,7 +39,7 @@ class Admin extends CI_Controller {
         $data['banner_nonaktif'] = $this->db->get_where('banner', ['status' => 'nonaktif'])->num_rows();
         $last = $this->db->order_by('updated_at', 'DESC')->limit(1)->get('banner')->row();
         $data['terakhir_update'] = $last ? $last->updated_at : null;
-        $data['banners'] = $this->db->order_by('updated_at', 'DESC')->get('banner')->result();
+        $data['banners']  = $this->db->order_by('updated_at', 'DESC')->get('banner')->result();
         $data['settings'] = $this->_get_settings();
         $data['running_text'] = $data['settings']['running_text'] ?? '';
         $this->load->view('admin/layout', $data);
@@ -330,17 +330,31 @@ class Admin extends CI_Controller {
 
     public function simpan_display_settings() {
         $fields = [
+            // Running Text
             'rt_font', 'rt_size', 'rt_speed', 'rt_color',
             'rt_bg_type', 'rt_bg_color', 'rt_bg_blur',
+            // Datetime
             'dt_font', 'dt_size', 'dt_jam_type', 'dt_color',
             'dt_bg_type', 'dt_bg_color', 'dt_bg_blur',
+            // Bottom Bar
             'bar_bg_type', 'bar_bg_color', 'bar_bg_blur',
+            // Slider
             'slider_interval',
+            // Mirror
+            'mirror_height',
         ];
+
         foreach ($fields as $f) {
             $val = $this->input->post($f);
-            if ($val !== FALSE) $this->_save_setting($f, $val);
+            if ($val !== FALSE && $val !== NULL) {
+                $this->_save_setting($f, $val);
+            }
         }
+
+        // Checkbox mirror_enable: kalau tidak dipost berarti unchecked = 0
+        $mirror = $this->input->post('mirror_enable');
+        $this->_save_setting('mirror_enable', $mirror ? '1' : '0');
+
         $this->session->set_flashdata('success', 'Pengaturan tampilan berhasil disimpan!');
         redirect('Admin');
     }
